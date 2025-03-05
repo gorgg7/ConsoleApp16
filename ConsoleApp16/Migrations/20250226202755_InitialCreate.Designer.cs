@@ -6,12 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
-
-namespace ConsoleApp16.Migrations
+ namespace ConsoleApp16.Migrations
 {
     [DbContext(typeof(iti))]
-    [Migration("20250226202755_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250305164924_itief")]
+    partial class itief
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,9 +41,32 @@ namespace ConsoleApp16.Migrations
                     b.Property<int>("duration")
                         .HasColumnType("int");
 
+                    b.Property<int>("topicid")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("topicid");
+
                     b.ToTable("courses");
+                });
+
+            modelBuilder.Entity("courseinstructor", b =>
+                {
+                    b.Property<int>("courseid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("instructorid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("evaluate")
+                        .HasColumnType("int");
+
+                    b.HasKey("courseid", "instructorid");
+
+                    b.HasIndex("instructorid");
+
+                    b.ToTable("courseinstructors");
                 });
 
             modelBuilder.Entity("department", b =>
@@ -59,6 +81,12 @@ namespace ConsoleApp16.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("hiringdate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("instructorid")
+                        .HasColumnType("int");
+
                     b.HasKey("Departmentid");
 
                     b.ToTable("departments");
@@ -66,11 +94,11 @@ namespace ConsoleApp16.Migrations
 
             modelBuilder.Entity("instructor", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("Instructorid")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Instructorid"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -84,13 +112,18 @@ namespace ConsoleApp16.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("departmentid")
+                        .HasColumnType("int");
+
                     b.Property<int>("hourrate")
                         .HasColumnType("int");
 
                     b.Property<int>("salary")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("Instructorid");
+
+                    b.HasIndex("departmentid");
 
                     b.ToTable("instructors");
                 });
@@ -118,9 +151,32 @@ namespace ConsoleApp16.Migrations
                     b.Property<int>("age")
                         .HasColumnType("int");
 
+                    b.Property<int>("departmentid")
+                        .HasColumnType("int");
+
                     b.HasKey("Studentid");
 
+                    b.HasIndex("departmentid");
+
                     b.ToTable("students");
+                });
+
+            modelBuilder.Entity("studentcourse", b =>
+                {
+                    b.Property<int>("courseid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("studentid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("grade")
+                        .HasColumnType("int");
+
+                    b.HasKey("courseid", "studentid");
+
+                    b.HasIndex("studentid");
+
+                    b.ToTable("studentcourses");
                 });
 
             modelBuilder.Entity("topic", b =>
@@ -139,7 +195,108 @@ namespace ConsoleApp16.Migrations
 
                     b.ToTable("topic");
                 });
+
+            modelBuilder.Entity("course", b =>
+                {
+                    b.HasOne("topic", "topic")
+                        .WithMany("courses")
+                        .HasForeignKey("topicid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("topic");
+                });
+
+            modelBuilder.Entity("courseinstructor", b =>
+                {
+                    b.HasOne("course", "course")
+                        .WithMany("courseinstructors")
+                        .HasForeignKey("courseid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("instructor", "instructor")
+                        .WithMany("courseinstructors")
+                        .HasForeignKey("instructorid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("course");
+
+                    b.Navigation("instructor");
+                });
+
+            modelBuilder.Entity("instructor", b =>
+                {
+                    b.HasOne("department", "department")
+                        .WithMany("instructors")
+                        .HasForeignKey("departmentid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("department");
+                });
+
+            modelBuilder.Entity("student", b =>
+                {
+                    b.HasOne("department", "department")
+                        .WithMany("students")
+                        .HasForeignKey("departmentid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("department");
+                });
+
+            modelBuilder.Entity("studentcourse", b =>
+                {
+                    b.HasOne("course", "course")
+                        .WithMany("studentcourses")
+                        .HasForeignKey("courseid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("student", "student")
+                        .WithMany("studentcourses")
+                        .HasForeignKey("studentid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("course");
+
+                    b.Navigation("student");
+                });
+
+            modelBuilder.Entity("course", b =>
+                {
+                    b.Navigation("courseinstructors");
+
+                    b.Navigation("studentcourses");
+                });
+
+            modelBuilder.Entity("department", b =>
+                {
+                    b.Navigation("instructors");
+
+                    b.Navigation("students");
+                });
+
+            modelBuilder.Entity("instructor", b =>
+                {
+                    b.Navigation("courseinstructors");
+                });
+
+            modelBuilder.Entity("student", b =>
+                {
+                    b.Navigation("studentcourses");
+                });
+
+            modelBuilder.Entity("topic", b =>
+                {
+                    b.Navigation("courses");
+                });
 #pragma warning restore 612, 618
         }
     }
 }
+
